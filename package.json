@@ -4,7 +4,7 @@
   "description": "playground-server",
   "main": "index.js",
   "scripts": {
-    "start": "npm start",
+    "start": "node index.js",
     "dev": "nodemon start"
   },
   "author": "anish",
