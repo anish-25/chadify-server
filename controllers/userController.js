@@ -188,18 +188,15 @@ const deleteUser = asyncHandler(async (req, res) => {
 const refreshToken = asyncHandler(async (req, res) => {
     let token = req.cookies.refreshToken
     if (token) {
-        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, ((err, decoded) => {
+        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (async(err, decoded) => {
             if (err) return res.status(403).json({ message: 'Token expired. Please Login' })
-            const accessToken = jwt.sign(
-                { "username": decoded.username, "id": decoded.id, "isAdmin": decoded.isAdmin },
-                process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '15m' }
-            );
-            return res.json({ accessToken })
+            const user = await User.findById(decoded.id)
+            if(user) createTokens(user,req,res)
+            else return res.status(403).json({ message: 'Invalid Token' })
         }))
     }
     else {
-        res.json({ message: 'Token is required' })
+        res.status(400).json({ message: 'Token is required' })
     }
 })
 
