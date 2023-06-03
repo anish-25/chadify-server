@@ -3,13 +3,38 @@ const mongoose = require('mongoose')
 const morgan = require('morgan')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
+const path = require('path')
 
 const cors = require('cors')
+const multer = require('multer')
+const { verifyToken } = require('./middlewares/verifyToken')
+
 require('dotenv').config()
 const port = process.env.PORT
 const app = express()
 
 mongoose.connect(process.env.MONGO_URI,() => console.log("Connected") )
+
+const storage = multer.diskStorage({
+    destination: (req,res,cb) => {
+        cb(null, "public/images");
+    },
+    filename: (req,file,cb)=> {
+        cb(null,req.body.name)
+    }
+})
+
+const upload = multer({storage})
+
+app.post('/api/upload',[verifyToken,upload.single("file")],(req, res)=> {
+    try{
+        return res.status(200).json({message:"File uploaded successfully"})
+    }catch(err){
+        return res.status(500).json(err)
+    }
+})
+
+app.use('/images',express.static(path.join(__dirname,'public/images')))
 
 app.use(cors({origin:'http://localhost:3000'}))
 app.use(express.json())
