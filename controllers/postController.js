@@ -8,7 +8,6 @@ require('dotenv').config()
 
 const createPost = asyncHandler(async (req, res) => {
     try {
-        console.log(req.user)
         const post = new Post(req.body)
         await post.save()
         res.json(post)

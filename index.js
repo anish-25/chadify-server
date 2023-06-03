@@ -4,6 +4,7 @@ const morgan = require('morgan')
 const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
 const path = require('path')
+const fs = require('fs')
 
 const cors = require('cors')
 const multer = require('multer')
@@ -15,9 +16,23 @@ const app = express()
 
 mongoose.connect(process.env.MONGO_URI,() => console.log("Connected") )
 
+app.use(cors({origin:'http://localhost:3000'}))
+app.use(express.json())
+app.use(morgan('common'))
+app.use(helmet())
+app.use(cookieParser())
+
 const storage = multer.diskStorage({
     destination: (req,res,cb) => {
-        cb(null, "public/images");
+        let path = "public/images/"+req.user.id
+        if(!fs.existsSync(path)){
+            fs.mkdir(path,() => {
+                cb(null, path);  
+            })
+        }
+        else{
+            cb(null, path);
+        }
     },
     filename: (req,file,cb)=> {
         cb(null,req.body.name)
@@ -35,12 +50,6 @@ app.post('/api/upload',[verifyToken,upload.single("file")],(req, res)=> {
 })
 
 app.use('/images',express.static(path.join(__dirname,'public/images')))
-
-app.use(cors({origin:'http://localhost:3000'}))
-app.use(express.json())
-app.use(morgan('common'))
-app.use(helmet())
-app.use(cookieParser())
 
 app.use('/api',require('./routes/routes'))
 
