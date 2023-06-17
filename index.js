@@ -25,6 +25,7 @@ app.use(cookieParser())
 const storage = multer.diskStorage({
     destination: (req,res,cb) => {
         let path = "public/images/"+req.user.id
+        if(req.body.avatar) path =  "public/images/avatars"
         if(!fs.existsSync(path)){
             fs.mkdir(path,() => {
                 cb(null, path);  

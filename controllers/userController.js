@@ -207,9 +207,11 @@ const timelinePosts = asyncHandler(async (req, res) => {
         const posts = await Promise.all(
             user.following.map(following_users => {
                 return Post.find({ user: following_users })
-            })
+            })  
         )
-        res.json(posts)
+        const ownPosts = await Post.find({user : user.id}).sort({createdAt:'desc'})
+        const allPosts = posts.concat(ownPosts)
+        res.json(allPosts)
     } catch (err) {
         res.status(500).json(err)
     }
@@ -226,4 +228,15 @@ const userPosts = asyncHandler(async (req, res) => {
     }
 })
 
-module.exports = { registerUser, loginUser, checkUsername, getBasicUserDetails, updateUser, getUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts }
+const searchUser = asyncHandler(async (req, res) => {
+    try {
+        const keyword = req.body.keyword
+        if(!keyword) return res.status(401).json({message:"Keyword is required"})
+        const result = await User.find({$or : [{username:{$regex:keyword,$options: 'i'}},{name:{$regex:keyword,$options: 'i'}}]},{password:0,followers:0,following:0,isAdmin:0,posts:0,bio:0,createdAt:0,updatedAt:0})
+        return res.status(200).json({isSuccess:true,data:result})
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+module.exports = { registerUser, loginUser, checkUsername, getBasicUserDetails, updateUser, getUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts,searchUser }

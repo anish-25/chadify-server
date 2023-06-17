@@ -6,6 +6,29 @@ const postSchema = new mongoose.Schema({
         ref: 'User',
         required : true
     },
+    username: {
+        type: String,
+        ref: 'User',
+        required : true
+    },
+    reactions:{
+        smilingWojak : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'User',
+        }],
+        depressedWojak : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'User',
+        }],
+        shockedWojak : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'User',
+        }],
+        smokingWojak : [{
+            type : mongoose.Schema.Types.ObjectId,
+            ref : 'User',
+        }],
+    },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
@@ -26,7 +49,14 @@ const postSchema = new mongoose.Schema({
     caption : {
         type : String,
         default : ""
+    },
+    location : {
+        type : String,
+        default : ""
     }
+},
+{
+    timestamps : true
 })
 
 module.exports = mongoose.model('Post', postSchema)

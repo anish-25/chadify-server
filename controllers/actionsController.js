@@ -61,4 +61,44 @@ const likeDislikePost = asyncHandler(async (req, res) => {
     }
 })
 
-module.exports = { followUser, likeDislikePost }
+const reactToAPost = asyncHandler(async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id)
+        if (!post) return res.status(400).json({ message: 'Invalid Post ID' })
+        if (!req.body.userId) return res.status(400).json({ message: "/userId is required" })
+        const user = await User.findById(req.body.userId)
+        if (!user) return res.status(400).json({ message: 'Invalid user' })
+        const reaction = req.body.reaction
+        if (!reaction || !Object.keys(post.reactions).includes(reaction)) return res.status(400).json({ message: 'Invalid reaction' })
+        if (!post.reactions[reaction].includes(req.body.userId)) {
+           post.reactions[reaction].push(req.body.userId)
+        }
+        Object.keys(post.reactions).map(reactionKey => {
+            if(reactionKey !== reaction){
+                post.reactions[reactionKey] = post.reactions[reactionKey].filter(user => user.toString() !== req.body.userId)
+                
+            }
+        })
+        await post.save()
+        return res.json({message:"Reaction updated successfully"})
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+const reactedUsers = asyncHandler(async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id)
+        if (!post) return res.status(400).json({ message: 'Invalid Post ID' })
+        const reaction = req.params.reaction
+        if (!reaction || !Object.keys(post.reactions).includes(reaction)) return res.status(400).json({ message: 'Invalid reaction' })
+        const users = await Promise.all(post.reactions[reaction].map(userId => User.findById(userId,{password:0,followers:0,following:0,isAdmin:0,posts:0,bio:0,createdAt:0,updatedAt:0}))) 
+        return res.json(users)
+    } catch (err) {
+        res.status(500).json(err)
+    }
+})
+
+
+
+module.exports = { followUser, likeDislikePost, reactToAPost,reactedUsers }

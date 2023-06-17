@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
-const { registerUser, loginUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts, updateUser, getUser, checkUsername, getBasicUserDetails } = require('../controllers/userController')
+const { registerUser, loginUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts, updateUser, getUser, checkUsername, getBasicUserDetails, searchUser } = require('../controllers/userController')
 const { verifyToken } = require('../middlewares/verifyToken')
-const { followUser, likeDislikePost } = require('../controllers/actionsController')
+const { followUser, likeDislikePost, reactToAPost, reactedUsers } = require('../controllers/actionsController')
 const { createPost, updatePost, getPost, deletePost } = require('../controllers/postController')
 
 //-----------Auth-----------------//
@@ -43,11 +43,20 @@ router.post('/follow-unfollow', verifyToken, followUser)
 //Like or dislike post
 router.put('/like-dislike/:id', verifyToken, likeDislikePost)
 
+//react to a post
+router.put('/react/:id', verifyToken, reactToAPost)
+
+//react to a post
+router.get('/reactions/:id/:reaction', verifyToken, reactedUsers)
+
 //Get timeline posts
 router.get('/timeline/:id', verifyToken, timelinePosts)
 
 //Get user posts
 router.get('/user-posts/:id', verifyToken, userPosts)
+
+//Search user
+router.post('/search/user', verifyToken, searchUser)
 
 
 

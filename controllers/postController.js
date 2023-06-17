@@ -8,9 +8,13 @@ require('dotenv').config()
 
 const createPost = asyncHandler(async (req, res) => {
     try {
+        if(req.user.id !== req.body.user) return res.status(401).json({message:"Unauthorized"})
+        const user = await User.findById(req.body.user)
+        if(!user) return res.status(401).json({message:"Invalid /userId"})
+        req.body.username = user.username
         const post = new Post(req.body)
         await post.save()
-        res.json(post)
+       return res.json(post)
     }
     catch (err) {
         res.status(500).json(err)
