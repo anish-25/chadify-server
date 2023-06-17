@@ -5,6 +5,9 @@ const { verifyToken } = require('../middlewares/verifyToken')
 const { followUser, likeDislikePost, reactToAPost, reactedUsers } = require('../controllers/actionsController')
 const { createPost, updatePost, getPost, deletePost } = require('../controllers/postController')
 
+//Test
+router.get('/test',(req,res) => res.status(200).json({message:'All good.'}))
+
 //-----------Auth-----------------//
 
 //Register
