@@ -4,6 +4,7 @@ const Post = require('../models/postsModel')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const { createTokens } = require('../utils/helpers')
+const { default: mongoose } = require('mongoose')
 require('dotenv').config()
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -45,7 +46,7 @@ const registerUser = asyncHandler(async (req, res) => {
         })
 
         if (user) {
-           return res.status(201).json({
+            return res.status(201).json({
                 id: user.id,
                 message: "Otp has been sent"
             })
@@ -70,7 +71,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const { email, password } = req.body
 
     //Check for User
-    const user = await User.findOne({ $or :[{email},{username:email}] })
+    const user = await User.findOne({ $or: [{ email }, { username: email }] })
     console.log(req.body)
     if (user && (await bcrypt.compare(password, user.password))) {
         //JWT
@@ -97,7 +98,7 @@ const verifyOtp = asyncHandler(async (req, res) => {
                 res.status(401).json({ message: "Email has been verified already" })
             }
             else {
-               const user = await User.findOneAndUpdate({ email }, { isEmailVerified: true },{new:true})
+                const user = await User.findOneAndUpdate({ email }, { isEmailVerified: true }, { new: true })
 
                 return createTokens(user, req, res)
             }
@@ -115,13 +116,24 @@ const verifyOtp = asyncHandler(async (req, res) => {
 
 const getUser = asyncHandler(async (req, res) => {
     try {
-        const userId = req.params.id
-        const user = await User.findById(userId)
-        if (user) {
-            const { password, ...rest } = user._doc
-            return res.json(rest)
+        const identifier = req.params.id
+        if (mongoose.Types.ObjectId.isValid(identifier)) {
+            const user = await User.findById(identifier)
+            if (user) {
+                const { password, ...rest } = user._doc
+                return res.status(200).json(rest)
+            }
+            return res.status(400).json({ message: "User doesn't exist" })
         }
-        return res.status(400).json({ message: "User doesn't exist" })
+        else {
+            const user = await User.findOne({ username: identifier })
+            if (user) {
+                const { password, ...rest } = user._doc
+                return res.status(200).json(rest)
+            }
+            return res.status(400).json({ message: "User doesn't exist" })
+        }
+
     }
     catch (err) {
         res.status(500).json(err)
@@ -188,10 +200,10 @@ const deleteUser = asyncHandler(async (req, res) => {
 const refreshToken = asyncHandler(async (req, res) => {
     let token = req.cookies.refreshToken
     if (token) {
-        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (async(err, decoded) => {
+        jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (async (err, decoded) => {
             if (err) return res.status(403).json({ message: 'Token expired. Please Login' })
             const user = await User.findById(decoded.id)
-            if(user) createTokens(user,req,res)
+            if (user) createTokens(user, req, res)
             else return res.status(403).json({ message: 'Invalid Token' })
         }))
     }
@@ -207,9 +219,9 @@ const timelinePosts = asyncHandler(async (req, res) => {
         const posts = await Promise.all(
             user.following.map(following_users => {
                 return Post.find({ user: following_users })
-            })  
+            })
         )
-        const ownPosts = await Post.find({user : user.id}).sort({createdAt:'desc'})
+        const ownPosts = await Post.find({ user: user.id }).sort({ createdAt: 'desc' })
         const allPosts = posts.concat(ownPosts)
         res.json(allPosts)
     } catch (err) {
@@ -231,12 +243,12 @@ const userPosts = asyncHandler(async (req, res) => {
 const searchUser = asyncHandler(async (req, res) => {
     try {
         const keyword = req.body.keyword
-        if(!keyword) return res.status(401).json({message:"Keyword is required"})
-        const result = await User.find({$or : [{username:{$regex:keyword,$options: 'i'}},{name:{$regex:keyword,$options: 'i'}}]},{password:0,followers:0,following:0,isAdmin:0,posts:0,bio:0,createdAt:0,updatedAt:0})
-        return res.status(200).json({isSuccess:true,data:result})
+        if (!keyword) return res.status(401).json({ message: "Keyword is required" })
+        const result = await User.find({ $or: [{ username: { $regex: keyword, $options: 'i' } }, { name: { $regex: keyword, $options: 'i' } }] }, { password: 0, followers: 0, following: 0, isAdmin: 0, posts: 0, bio: 0, createdAt: 0, updatedAt: 0 })
+        return res.status(200).json({ isSuccess: true, data: result })
     } catch (err) {
         res.status(500).json(err)
     }
 })
 
-module.exports = { registerUser, loginUser, checkUsername, getBasicUserDetails, updateUser, getUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts,searchUser }
+module.exports = { registerUser, loginUser, checkUsername, getBasicUserDetails, updateUser, getUser, deleteUser, verifyOtp, refreshToken, timelinePosts, userPosts, searchUser }
