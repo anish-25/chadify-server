@@ -6,9 +6,9 @@ const createTokens = (user, req, res) => {
     res.cookie("refreshToken", refreshToken, {
         domain: 'chadify-server.vercel.app',
         path:'/',
-        // httpOnly: true,
-        // secure: true,
-        // sameSite:'none'
+        httpOnly: true,
+        secure: true,
+        sameSite:'none'
          })
     return res.json({
         id: user.id,
