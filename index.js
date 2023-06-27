@@ -9,10 +9,20 @@ const fs = require('fs')
 const cors = require('cors')
 const multer = require('multer')
 const { verifyToken } = require('./middlewares/verifyToken')
+const { v4: uuidv4 } = require('uuid');
 
 require('dotenv').config()
 const port = process.env.PORT
 const app = express()
+
+const admin = require('firebase-admin');
+const serviceAccount = require('./firebase-cred.json.json')
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    storageBucket: 'gs://chadify-c49d8.appspot.com/'
+});
+
+const bucket = admin.storage().bucket();
 
 mongoose.connect(process.env.MONGO_URI, () => console.log("Connected"))
 
@@ -22,29 +32,56 @@ app.use(morgan('common'))
 app.use(helmet())
 app.use(cookieParser())
 
-const storage = multer.diskStorage({
-    destination: (req, res, cb) => {
-        let dest = path.join(process.cwd(), "public/images/" + req.user.id)
-        if (req.body.avatar) dest = path.join(process.cwd(), "public/images/avatars")
-        if (!fs.existsSync(dest)) {
-            fs.mkdir(dest, () => {
-                cb(null, dest);
-            })
-        }
-        else {
-            cb(null, dest);
-        }
-    },
-    filename: (req, file, cb) => {
-        cb(null, req.body.name)
-    }
-})
+// const storage = multer.diskStorage({
+//     destination: (req, res, cb) => {
+//         let dest = path.join(process.cwd(), "public/images/" + req.user.id)
+//         if (req.body.avatar) dest = path.join(process.cwd(), "public/images/avatars")
+//         if (!fs.existsSync(dest)) {
+//             fs.mkdir(dest, () => {
+//                 cb(null, dest);
+//             })
+//         }
+//         else {
+//             cb(null, dest);
+//         }
+//     },
+//     filename: (req, file, cb) => {
+//         cb(null, req.body.name)
+//     }
+// })
 
-const upload = multer({ storage })
+const storage = multer.memoryStorage();
+
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })
 
 app.post('/api/upload', [verifyToken, upload.single("file")], (req, res) => {
     try {
-        return res.status(200).json({ message: "File uploaded successfully" })
+        console.log(req.body)
+        const file = req.file;
+        const name = req.body.name || uuidv4();
+        if (!file) {
+            return res.status(400).json({ error: 'No file received' });
+        }
+        let dest;
+        if (req.body.avatar) {
+            dest = `avatars/${name}`;
+        } else {
+            dest = `${req.user.id}/${name}`;
+        }
+        const blob = bucket.file(dest);
+        const blobStream = blob.createWriteStream();
+
+        blobStream.on('error', (error) => {
+            console.error(error);
+            return res.status(500).json({ error: 'Failed to upload file' });
+        });
+
+        blobStream.on('finish', () => {
+            return res.status(200).json({ message: 'File uploaded successfully' });
+        });
+
+        blobStream.end(file.buffer);
+        // return res.status(200).json({ message: "File uploaded successfully" })
     } catch (err) {
         return res.status(500).json(err)
     }
