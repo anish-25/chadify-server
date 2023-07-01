@@ -23,7 +23,7 @@ router.post('/username', checkUsername)
 router.post('/verify-otp', verifyOtp)
 
 //Refresh token
-router.get('/refresh-token', refreshToken)
+router.post('/refresh-token', refreshToken)
 
 //Get basic user details without auth
 router.get('/user-details/:id',getBasicUserDetails)

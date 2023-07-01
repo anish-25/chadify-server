@@ -16,6 +16,7 @@ const createTokens = (user, req, res) => {
         username :  user.username,
         isEmailVerified: user.isEmailVerified,
         accessToken: { token: accessToken, maxAge: 300 * 1000 },
+        refreshToken: { token: refreshToken, maxAge: 300 * 1000 },
     })
 }
 

@@ -198,7 +198,8 @@ const deleteUser = asyncHandler(async (req, res) => {
 })
 
 const refreshToken = asyncHandler(async (req, res) => {
-    let token = req.cookies.refreshToken
+    // let token = req.cookies.refreshToken
+    let token = req.body.refreshToken
     if (token) {
         jwt.verify(token, process.env.REFRESH_TOKEN_SECRET, (async (err, decoded) => {
             if (err) return res.status(403).json({ message: 'Token expired. Please Login' })
