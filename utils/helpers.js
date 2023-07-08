@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken')
+const firebase = require('../firebase')
 const createTokens = (user, req, res) => {
     const accessToken = jwt.sign({ "username": user.name, "id": user.id, "isAdmin": user.isAdmin }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1d' })
     const refreshToken = jwt.sign({ "username": user.name, "id": user.id, "isAdmin": user.isAdmin }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d' })
@@ -20,4 +21,14 @@ const createTokens = (user, req, res) => {
     })
 }
 
-module.exports = {createTokens}
+ const replaceWithFirebaseUrl = async (userPosts) => {
+    const storageRefs = userPosts.map((post) => firebase.storage().ref(post.user + '/' + post.media));
+    try {
+      const urls = await Promise.all(storageRefs.map((storageRef) => storageRef.getDownloadURL()));
+      urls.map((url,index) => userPosts[index].media = url)
+    } catch (error) {
+    }
+    return userPosts
+  }
+
+module.exports = {createTokens,replaceWithFirebaseUrl}

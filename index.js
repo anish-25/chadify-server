@@ -32,24 +32,6 @@ app.use(morgan('common'))
 app.use(helmet())
 app.use(cookieParser())
 
-// const storage = multer.diskStorage({
-//     destination: (req, res, cb) => {
-//         let dest = path.join(process.cwd(), "public/images/" + req.user.id)
-//         if (req.body.avatar) dest = path.join(process.cwd(), "public/images/avatars")
-//         if (!fs.existsSync(dest)) {
-//             fs.mkdir(dest, () => {
-//                 cb(null, dest);
-//             })
-//         }
-//         else {
-//             cb(null, dest);
-//         }
-//     },
-//     filename: (req, file, cb) => {
-//         cb(null, req.body.name)
-//     }
-// })
-
 const storage = multer.memoryStorage();
 
 const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } })

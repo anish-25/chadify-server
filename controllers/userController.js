@@ -3,7 +3,7 @@ const User = require('../models/userModel')
 const Post = require('../models/postsModel')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { createTokens } = require('../utils/helpers')
+const { createTokens, replaceWithFirebaseUrl } = require('../utils/helpers')
 const { default: mongoose } = require('mongoose')
 require('dotenv').config()
 
@@ -224,9 +224,10 @@ const timelinePosts = asyncHandler(async (req, res) => {
         )
         const ownPosts = await Post.find({ user: user.id }).sort({ createdAt: 'desc' })
         const allPosts = posts.concat(ownPosts)
-        res.json(allPosts)
+        const replaced = await replaceWithFirebaseUrl(allPosts)
+        return res.json(replaced)
     } catch (err) {
-        res.status(500).json(err)
+        return res.status(500).json(err)
     }
 })
 
@@ -235,9 +236,10 @@ const userPosts = asyncHandler(async (req, res) => {
         const user = await User.findById(req.params.id)
         if (!user) res.status(400).json({ message: "User not found" })
         const posts = await Post.find({ user: req.params.id })
-        res.json(posts)
+        const replaced = await replaceWithFirebaseUrl(posts)
+        return res.json(replaced)
     } catch (err) {
-        res.status(500).json(err)
+        return res.status(500).json(err)
     }
 })
 
