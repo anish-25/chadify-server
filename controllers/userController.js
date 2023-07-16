@@ -3,7 +3,7 @@ const User = require('../models/userModel')
 const Post = require('../models/postsModel')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const { createTokens, replaceWithFirebaseUrl } = require('../utils/helpers')
+const { createTokens, replaceWithFirebaseUrl, getUserAvatar } = require('../utils/helpers')
 const { default: mongoose } = require('mongoose')
 require('dotenv').config()
 
@@ -121,6 +121,8 @@ const getUser = asyncHandler(async (req, res) => {
             const user = await User.findById(identifier)
             if (user) {
                 const { password, ...rest } = user._doc
+                rest.avatar = await getUserAvatar(user._id)
+                console.log(rest)
                 return res.status(200).json(rest)
             }
             return res.status(400).json({ message: "User doesn't exist" })
@@ -129,6 +131,7 @@ const getUser = asyncHandler(async (req, res) => {
             const user = await User.findOne({ username: identifier })
             if (user) {
                 const { password, ...rest } = user._doc
+                rest.avatar = await getUserAvatar(user._id)
                 return res.status(200).json(rest)
             }
             return res.status(400).json({ message: "User doesn't exist" })
