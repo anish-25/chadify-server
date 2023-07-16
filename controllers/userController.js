@@ -226,8 +226,8 @@ const timelinePosts = asyncHandler(async (req, res) => {
             })
         )
         const ownPosts = await Post.find({ user: user.id }).sort({ createdAt: 'desc' })
-        const allPosts = posts.concat(ownPosts)
-        const replaced = await replaceWithFirebaseUrl(allPosts)
+        const allPosts = posts[0]?.length? posts[0].concat(ownPosts) : posts.concat(ownPosts)
+        const replaced = await replaceWithFirebaseUrl(allPosts[0]?.length ? allPosts[0] : allPosts)
         return res.json(replaced)
     } catch (err) {
         return res.status(500).json(err)
