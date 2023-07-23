@@ -238,7 +238,7 @@ const userPosts = asyncHandler(async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
         if (!user) res.status(400).json({ message: "User not found" })
-        const posts = await Post.find({ user: req.params.id })
+        const posts = await Post.find({ user: req.params.id }).sort({ createdAt: 'desc' })
         const replaced = await replaceWithFirebaseUrl(posts)
         return res.json(replaced)
     } catch (err) {
