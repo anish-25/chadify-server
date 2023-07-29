@@ -65,22 +65,22 @@ const reactToAPost = asyncHandler(async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
         if (!post) return res.status(400).json({ message: 'Invalid Post ID' })
-        if (!req.body.userId) return res.status(400).json({ message: "/userId is required" })
-        const user = await User.findById(req.body.userId)
+        if (!req.user.id) return res.status(400).json({ message: "/userId is required" })
+        const user = await User.findById(req.user.id)
         if (!user) return res.status(400).json({ message: 'Invalid user' })
         const reaction = req.body.reaction
         if (!reaction || !Object.keys(post.reactions).includes(reaction)) return res.status(400).json({ message: 'Invalid reaction' })
-        if (!post.reactions[reaction].includes(req.body.userId)) {
-           post.reactions[reaction].push(req.body.userId)
+        if (!post.reactions[reaction].includes(req.user.id.toString())) {
+           post.reactions[reaction].push(req.user.id)
         }
         Object.keys(post.reactions).map(reactionKey => {
             if(reactionKey !== reaction){
-                post.reactions[reactionKey] = post.reactions[reactionKey].filter(user => user.toString() !== req.body.userId)
+                post.reactions[reactionKey] = post.reactions[reactionKey].filter(user => user.toString() !== req.user.id)
                 
             }
         })
         await post.save()
-        return res.json({message:"Reaction updated successfully"})
+        return res.json(post)
     } catch (err) {
         res.status(500).json(err)
     }

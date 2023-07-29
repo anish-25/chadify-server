@@ -26,7 +26,8 @@ const bucket = admin.storage().bucket();
 
 mongoose.connect(process.env.MONGO_URI, () => console.log("Connected"))
 
-app.use(cors({ origin: 'https://chadify-client.vercel.app', credentials: true }))
+// app.use(cors({ origin: 'https://chadify-client.vercel.app', credentials: true }))
+app.use(cors())
 app.use(express.json())
 app.use(morgan('common'))
 app.use(helmet())
